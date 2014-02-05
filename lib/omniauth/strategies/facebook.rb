@@ -27,7 +27,7 @@ module OmniAuth
         :param_name => 'access_token'
       }
 
-      option :authorize_options, [:scope, :display, :auth_type]
+      option :authorize_options, [:scope, :display, :auth_type, :state, :redirect_uri]
 
       uid { raw_info['id'] }
 
@@ -113,13 +113,12 @@ module OmniAuth
       # /auth/facebook?display=popup
       def authorize_params
         super.tap do |params|
-          %w[display scope auth_type].each do |v|
-            if request.params[v]
-              params[v.to_sym] = request.params[v]
-            end
+          options[:authorize_options].each do |v|
+            params[v.to_sym] = request.params[v.to_s] unless [nil, ''].include?(request.params[v.to_s])
           end
 
           params[:scope] ||= DEFAULT_SCOPE
+          session['omniauth.state'] = params[:state] if params[:state]
         end
       end
 
